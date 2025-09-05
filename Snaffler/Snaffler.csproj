@@ -29,14 +29,14 @@
     <AssemblyCompany>SnaffCon</AssemblyCompany>
     <AssemblyProduct>Snaffler</AssemblyProduct>
     <AssemblyCopyright>Copyright © 2025</AssemblyCopyright>
-    <AssemblyVersion>1.0.213.0</AssemblyVersion>
-    <FileVersion>1.0.213.0</FileVersion>
+    <AssemblyVersion>1.0.215.0</AssemblyVersion>
+    <FileVersion>1.0.215.0</FileVersion>
     <ComVisible>false</ComVisible>
     <Guid>2aa060b4-de88-4d2a-a26a-760c1cefec3e</Guid>
     
     <!-- NuGet Package Metadata -->
     <PackageId>Snaffler</PackageId>
-    <PackageVersion>1.0.213</PackageVersion>
+    <PackageVersion>1.0.215</PackageVersion>
     <Title>Snaffler</Title>
     <Description>A tool for quickly finding delicious candy needles in a haystack of network shares. Snaffler is designed to help red teams and security professionals identify sensitive files and data across network shares during penetration testing and security assessments.</Description>
     <Authors>@l0ss and @Sh3r4</Authors>
@@ -66,24 +66,51 @@
 
   <!-- Project references -->
   <ItemGroup>
-    <ProjectReference Include="..\SnaffCore\SnaffCore.csproj" />
+    <ProjectReference Include="..\SnaffCore\SnaffCore.csproj">
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <IncludeAssets>All</IncludeAssets>
+      <PrivateAssets>All</PrivateAssets>
+    </ProjectReference>
   </ItemGroup>
 
   <!-- Package references -->
   <ItemGroup>
-    <PackageReference Include="CommandLineArgumentsParser" Version="3.0.22" />
+    <PackageReference Include="CommandLineArgumentsParser" Version="3.0.22">
+      <PrivateAssets>None</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="dnMerge" Version="0.5.15">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Nett" Version="0.15.0" />
-    <PackageReference Include="NLog" Version="4.7.15" />
+    <PackageReference Include="Nett" Version="0.15.0">
+      <PrivateAssets>None</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="NLog" Version="4.7.15">
+      <PrivateAssets>None</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 
   <!-- Embedded resources -->
   <ItemGroup>
     <EmbeddedResource Include="SnaffRules\DefaultRules\**\*.toml" />
   </ItemGroup>
+
+  <!-- Content files for NuGet package -->
+  <ItemGroup>
+    <None Include="SnaffRules\DefaultRules\**\*.toml" Pack="true" PackagePath="contentFiles\any\any\SnaffRules\DefaultRules\" />
+    <None Include="SnaffRules\README.md" Pack="true" PackagePath="contentFiles\any\any\SnaffRules\" />
+    <None Include="SnaffRules\LICENSE" Pack="true" PackagePath="contentFiles\any\any\SnaffRules\" />
+    <None Include="SnaffRules\DefaultRules\unsorted.txt" Pack="true" PackagePath="contentFiles\any\any\SnaffRules\DefaultRules\" />
+  </ItemGroup>
+
+  <!-- Force include SnaffCore.dll in package -->
+  <ItemGroup>
+    <None Include="bin\Release\netstandard2.0\SnaffCore.dll" Pack="true" PackagePath="lib\netstandard2.0\" Condition="Exists('bin\Release\netstandard2.0\SnaffCore.dll')" />
+    <None Include="bin\Release\netstandard2.0\SnaffCore.pdb" Pack="true" PackagePath="lib\netstandard2.0\" Condition="Exists('bin\Release\netstandard2.0\SnaffCore.pdb')" />
+    <None Include="bin\Release\netstandard2.0\SnaffCore.dll" Pack="true" PackagePath="lib\net48\" Condition="Exists('bin\Release\netstandard2.0\SnaffCore.dll')" />
+    <None Include="bin\Release\netstandard2.0\SnaffCore.pdb" Pack="true" PackagePath="lib\net48\" Condition="Exists('bin\Release\netstandard2.0\SnaffCore.pdb')" />
+  </ItemGroup>
+
   
   <!-- Resource files (handled automatically by SDK) -->
   <ItemGroup>
@@ -95,7 +122,7 @@
 
   <!-- Content files -->
   <ItemGroup>
-    <None Include="app.config" />
+    <None Include="app.config" Pack="true" PackagePath="content\" />
     <Content Include="Snaffler.ico" />
   </ItemGroup>
 

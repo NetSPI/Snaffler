@@ -5,6 +5,7 @@ using NLog.Targets;
 using SnaffCore;
 using SnaffCore.Concurrency;
 using SnaffCore.Config;
+using SnaffCore.Callbacks;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -20,6 +21,7 @@ namespace Snaffler
         private BlockingMq Mq { get; set; }
         private LogLevel LogLevel { get; set; }
         private Options Options { get; set; }
+        private CallbackManager CallbackManager { get; set; }
 
         private string _hostString;
 
@@ -35,6 +37,39 @@ namespace Snaffler
             }
 
             return _hostString;
+        }
+
+        public SnaffleRunner()
+        {
+            CallbackManager = new CallbackManager();
+        }
+
+        /// <summary>
+        /// Register a callback to receive logging events
+        /// </summary>
+        /// <param name="callback">The callback to register</param>
+        public void RegisterCallback(ISnafflerCallback callback)
+        {
+            CallbackManager.RegisterCallback(callback);
+        }
+
+        /// <summary>
+        /// Register a simple action-based callback
+        /// </summary>
+        /// <param name="callback">Action to call on log events</param>
+        /// <returns>A wrapper that can be used to unregister the callback</returns>
+        public ISnafflerCallback RegisterCallback(Action<SnafflerLogEventArgs> callback)
+        {
+            return CallbackManager.RegisterCallback(callback);
+        }
+
+        /// <summary>
+        /// Unregister a callback
+        /// </summary>
+        /// <param name="callback">The callback to unregister</param>
+        public void UnregisterCallback(ISnafflerCallback callback)
+        {
+            CallbackManager.UnregisterCallback(callback);
         }
 
         public void Run(string[] args)
@@ -251,43 +286,77 @@ namespace Snaffler
             return false;
         }
 
+        private SnafflerLogLevel GetLogLevel(SnafflerMessageType messageType)
+        {
+            switch (messageType)
+            {
+                case SnafflerMessageType.Trace:
+                    return SnafflerLogLevel.Trace;
+                case SnafflerMessageType.Degub:
+                    return SnafflerLogLevel.Debug;
+                case SnafflerMessageType.Info:
+                case SnafflerMessageType.Finish:
+                    return SnafflerLogLevel.Info;
+                case SnafflerMessageType.FileResult:
+                case SnafflerMessageType.DirResult:
+                case SnafflerMessageType.ShareResult:
+                    return LogLevel == LogLevel.Warn ? SnafflerLogLevel.Data : SnafflerLogLevel.Warn;
+                case SnafflerMessageType.Error:
+                    return SnafflerLogLevel.Error;
+                case SnafflerMessageType.Fatal:
+                    return SnafflerLogLevel.Fatal;
+                default:
+                    return SnafflerLogLevel.Info;
+            }
+        }
+
         private void ProcessMessage(SnafflerMessage message)
         {
             //  standardized time formatting,  UTC
             string datetime = String.Format("{1}{0}{2:u}{0}", Options.Separator, hostString(), message.DateTime.ToUniversalTime());
+            string formattedMessage = "";
 
             switch (message.Type)
             {
                 case SnafflerMessageType.Trace:
-                    Logger.Trace(datetime + "[Trace]" + Options.Separator + message.Message);
+                    formattedMessage = datetime + "[Trace]" + Options.Separator + message.Message;
+                    Logger.Trace(formattedMessage);
                     break;
                 case SnafflerMessageType.Degub:
-                    Logger.Debug(datetime + "[Degub]" + Options.Separator + message.Message);
+                    formattedMessage = datetime + "[Degub]" + Options.Separator + message.Message;
+                    Logger.Debug(formattedMessage);
                     break;
                 case SnafflerMessageType.Info:
-                    Logger.Info(datetime + "[Info]" + Options.Separator + message.Message);
+                    formattedMessage = datetime + "[Info]" + Options.Separator + message.Message;
+                    Logger.Info(formattedMessage);
                     break;
                 case SnafflerMessageType.FileResult:
-                    Logger.Warn(datetime + "[File]" + Options.Separator + FileResultLogFromMessage(message));
+                    formattedMessage = datetime + "[File]" + Options.Separator + FileResultLogFromMessage(message);
+                    Logger.Warn(formattedMessage);
                     break;
                 case SnafflerMessageType.DirResult:
-                    Logger.Warn(datetime + "[Dir]" + Options.Separator + DirResultLogFromMessage(message));
+                    formattedMessage = datetime + "[Dir]" + Options.Separator + DirResultLogFromMessage(message);
+                    Logger.Warn(formattedMessage);
                     break;
                 case SnafflerMessageType.ShareResult:
-                    Logger.Warn(datetime + "[Share]" + Options.Separator + ShareResultLogFromMessage(message));
+                    formattedMessage = datetime + "[Share]" + Options.Separator + ShareResultLogFromMessage(message);
+                    Logger.Warn(formattedMessage);
                     break;
                 case SnafflerMessageType.Error:
-                    Logger.Error(datetime + "[Error]" + Options.Separator + message.Message);
+                    formattedMessage = datetime + "[Error]" + Options.Separator + message.Message;
+                    Logger.Error(formattedMessage);
                     break;
                 case SnafflerMessageType.Fatal:
-                    Logger.Fatal(datetime + "[Fatal]" + Options.Separator + message.Message);
+                    formattedMessage = datetime + "[Fatal]" + Options.Separator + message.Message;
+                    Logger.Fatal(formattedMessage);
                     if (Debugger.IsAttached)
                     {
                         Console.ReadKey();
                     }
                     break;
                 case SnafflerMessageType.Finish:
-                    Logger.Info("Snaffler out.");
+                    formattedMessage = "Snaffler out.";
+                    Logger.Info(formattedMessage);
                     
                     if (Debugger.IsAttached)
                     {
@@ -296,53 +365,67 @@ namespace Snaffler
                     }
                     break;
             }
+
+            // Trigger callbacks
+            if (CallbackManager != null && CallbackManager.CallbackCount > 0)
+            {
+                var eventArgs = new SnafflerLogEventArgs(
+                    message, 
+                    formattedMessage, 
+                    GetLogLevel(message.Type), 
+                    hostString()
+                );
+                CallbackManager.TriggerCallbacks(eventArgs);
+            }
         }
 
         private void ProcessMessageJSON(SnafflerMessage message)
         {
             //  standardized time formatting,  UTC
             string datetime = String.Format("{1}{0}{2:u}{0}", Options.Separator, hostString(), message.DateTime.ToUniversalTime());
+            string formattedMessage = "";
 
             switch (message.Type)
             {
                 case SnafflerMessageType.Trace:
-                    //Logger.Trace(message);
-                    Logger.Trace(datetime + "[Trace]" + Options.Separator + message.Message, message);
+                    formattedMessage = datetime + "[Trace]" + Options.Separator + message.Message;
+                    Logger.Trace(formattedMessage, message);
                     break;
                 case SnafflerMessageType.Degub:
-                    //Logger.Debug(message);
-                    Logger.Debug(datetime + "[Degub]" + Options.Separator + message.Message, message);
+                    formattedMessage = datetime + "[Degub]" + Options.Separator + message.Message;
+                    Logger.Debug(formattedMessage, message);
                     break;
                 case SnafflerMessageType.Info:
-                    //Logger.Info(message);
-                    Logger.Info(datetime + "[Info]" + Options.Separator + message.Message, message);
+                    formattedMessage = datetime + "[Info]" + Options.Separator + message.Message;
+                    Logger.Info(formattedMessage, message);
                     break;
                 case SnafflerMessageType.FileResult:
-                    //Logger.Warn(message);
-                    Logger.Warn(datetime + "[File]" + Options.Separator + FileResultLogFromMessage(message), message);
+                    formattedMessage = datetime + "[File]" + Options.Separator + FileResultLogFromMessage(message);
+                    Logger.Warn(formattedMessage, message);
                     break;
                 case SnafflerMessageType.DirResult:
-                    //Logger.Warn(message);
-                    Logger.Warn(datetime + "[Dir]" + Options.Separator + DirResultLogFromMessage(message), message);
+                    formattedMessage = datetime + "[Dir]" + Options.Separator + DirResultLogFromMessage(message);
+                    Logger.Warn(formattedMessage, message);
                     break;
                 case SnafflerMessageType.ShareResult:
-                    //Logger.Warn(message);
-                    Logger.Warn(datetime + "[Share]" + Options.Separator + ShareResultLogFromMessage(message), message);
+                    formattedMessage = datetime + "[Share]" + Options.Separator + ShareResultLogFromMessage(message);
+                    Logger.Warn(formattedMessage, message);
                     break;
                 case SnafflerMessageType.Error:
-                    //Logger.Error(message);
-                    Logger.Error(datetime + "[Error]" + Options.Separator + message.Message, message);
+                    formattedMessage = datetime + "[Error]" + Options.Separator + message.Message;
+                    Logger.Error(formattedMessage, message);
                     break;
                 case SnafflerMessageType.Fatal:
-                    //Logger.Fatal(message);
-                    Logger.Fatal(datetime + "[Fatal]" + Options.Separator + message.Message, message);
+                    formattedMessage = datetime + "[Fatal]" + Options.Separator + message.Message;
+                    Logger.Fatal(formattedMessage, message);
                     if (Debugger.IsAttached)
                     {
                         Console.ReadKey();
                     }
                     break;
                 case SnafflerMessageType.Finish:
-                    Logger.Info("Snaffler out.");
+                    formattedMessage = "Snaffler out.";
+                    Logger.Info(formattedMessage);
 
                     if (Debugger.IsAttached)
                     {
@@ -355,6 +438,18 @@ namespace Snaffler
                         FixJSONOutput();
                     }
                     break;
+            }
+
+            // Trigger callbacks
+            if (CallbackManager != null && CallbackManager.CallbackCount > 0)
+            {
+                var eventArgs = new SnafflerLogEventArgs(
+                    message, 
+                    formattedMessage, 
+                    GetLogLevel(message.Type), 
+                    hostString()
+                );
+                CallbackManager.TriggerCallbacks(eventArgs);
             }
         }
 

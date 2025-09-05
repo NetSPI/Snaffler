@@ -9,6 +9,7 @@
     <LangVersion>7.3</LangVersion>
     <Platforms>AnyCPU;x86</Platforms>
     <Prefer32Bit>false</Prefer32Bit>
+    <IsPackable>true</IsPackable>
     
     <!-- Assembly metadata (moved from AssemblyInfo.cs) -->
     <AssemblyTitle>SnaffCore</AssemblyTitle>
@@ -16,17 +17,39 @@
     <AssemblyCompany>SnaffCon</AssemblyCompany>
     <AssemblyProduct>SnaffCore</AssemblyProduct>
     <AssemblyCopyright>Copyright © 2025</AssemblyCopyright>
-    <AssemblyVersion>1.0.213.0</AssemblyVersion>
-    <FileVersion>1.0.213.0</FileVersion>
+    <AssemblyVersion>1.0.214.0</AssemblyVersion>
+    <FileVersion>1.0.214.0</FileVersion>
     <ComVisible>false</ComVisible>
     <Guid>b118802d-2e46-4e41-aac7-9ee890268f8b</Guid>
+    
+    <!-- NuGet Package Metadata -->
+    <PackageId>SnaffCore</PackageId>
+    <PackageVersion>1.0.214</PackageVersion>
+    <Title>SnaffCore</Title>
+    <Description>Core library for Snaffler - provides file discovery, classification, and analysis functionality for network shares</Description>
+    <Authors>@l0ss and @Sh3r4</Authors>
+    <Company>SnaffCon</Company>
+    <Product>SnaffCore</Product>
+    <Copyright>Copyright © 2025</Copyright>
+    <PackageTags>security;penetration testing;redteam;file discovery;network shares;infosec;sensitive data;discovery;core</PackageTags>
+    <PackageProjectUrl>https://github.com/SnaffCon/Snaffler</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/SnaffCon/Snaffler</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <!-- Package references -->
   <ItemGroup>
-    <PackageReference Include="Nett.Coma" Version="0.15.0" />
-    <PackageReference Include="System.DirectoryServices" Version="7.0.0" />
-    <PackageReference Include="System.DirectoryServices.Protocols" Version="7.0.0" />
+    <PackageReference Include="Nett.Coma" Version="0.15.0">
+      <PrivateAssets>None</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="System.DirectoryServices" Version="7.0.0">
+      <PrivateAssets>None</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="System.DirectoryServices.Protocols" Version="7.0.0">
+      <PrivateAssets>None</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 
   <!-- Exclude AssemblyInfo.cs since we're using project properties -->
