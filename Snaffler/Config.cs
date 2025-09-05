@@ -15,8 +15,10 @@ using System.Net;
 
 namespace Snaffler
 {
-    public static class Config
+    public class Config
     {
+        private Options _options;
+
         public static Options Parse(string[] args)
         {
             BlockingMq Mq = BlockingMq.GetMq();
@@ -41,6 +43,230 @@ namespace Snaffler
             return options;
         }
 
+        /// <summary>
+        /// Creates and initializes the options object for DLL usage.
+        /// </summary>
+        public Config()
+        {
+            _options = new Options();
+            _options.PrepareClassifiers();
+        }
+
+        /// <summary>
+        /// Gets the current options object.
+        /// </summary>
+        /// <returns>Current options object</returns>
+        public Options GetOptions()
+        {
+            return _options;
+        }
+
+        // Simple getter and setter methods for command line options
+        public void SetOutFile(string outFile)
+        {
+            _options.LogToFile = !string.IsNullOrEmpty(outFile);
+            _options.LogFilePath = outFile;
+        }
+
+        public string GetOutFile()
+        {
+            return _options.LogFilePath;
+        }
+
+        public void SetVerbosity(string verbosity)
+        {
+            _options.LogLevelString = verbosity;
+        }
+
+        public string GetVerbosity()
+        {
+            return _options.LogLevelString;
+        }
+
+        public void SetStdOut(bool stdOut)
+        {
+            _options.LogToConsole = stdOut;
+        }
+
+        public bool GetStdOut()
+        {
+            return _options.LogToConsole;
+        }
+
+        public void SetInterestLevel(int interestLevel)
+        {
+            _options.InterestLevel = interestLevel;
+        }
+
+        public int GetInterestLevel()
+        {
+            return _options.InterestLevel;
+        }
+
+        public void SetSnaffleDir(string snaffleDir)
+        {
+            _options.Snaffle = !string.IsNullOrEmpty(snaffleDir);
+            _options.SnafflePath = snaffleDir?.TrimEnd('\\');
+        }
+
+        public string GetSnaffleDir()
+        {
+            return _options.SnafflePath;
+        }
+
+        public void SetSnaffleSize(long snaffleSize)
+        {
+            _options.MaxSizeToSnaffle = snaffleSize;
+        }
+
+        public long GetSnaffleSize()
+        {
+            return _options.MaxSizeToSnaffle;
+        }
+
+        public void SetDirTarget(string dirTarget)
+        {
+            _options.ShareFinderEnabled = string.IsNullOrEmpty(dirTarget);
+            if (!string.IsNullOrEmpty(dirTarget))
+            {
+                string pathTarget = dirTarget.Length > 4 ? dirTarget.TrimEnd('\\') : dirTarget;
+                _options.PathTargets.Clear();
+                _options.PathTargets.Add(pathTarget);
+            }
+        }
+
+        public string GetDirTarget()
+        {
+            return _options.PathTargets.FirstOrDefault();
+        }
+
+        public void SetDomain(string domain)
+        {
+            _options.TargetDomain = domain;
+        }
+
+        public string GetDomain()
+        {
+            return _options.TargetDomain;
+        }
+
+        public void SetDomainController(string domainController)
+        {
+            _options.TargetDc = domainController;
+        }
+
+        public string GetDomainController()
+        {
+            return _options.TargetDc;
+        }
+
+        public void SetMaxGrepSize(long maxGrepSize)
+        {
+            _options.MaxSizeToGrep = maxGrepSize;
+        }
+
+        public long GetMaxGrepSize()
+        {
+            return _options.MaxSizeToGrep;
+        }
+
+        public void SetGrepContext(int grepContext)
+        {
+            _options.MatchContextBytes = grepContext;
+        }
+
+        public int GetGrepContext()
+        {
+            return _options.MatchContextBytes;
+        }
+
+        public void SetDomainUsers(bool domainUsers)
+        {
+            _options.DomainUserRules = domainUsers;
+        }
+
+        public bool GetDomainUsers()
+        {
+            return _options.DomainUserRules;
+        }
+
+        public void SetMaxThreads(int maxThreads)
+        {
+            _options.MaxThreads = maxThreads;
+            _options.ShareThreads = maxThreads / 3;
+            _options.FileThreads = maxThreads / 3;
+            _options.TreeThreads = maxThreads / 3;
+        }
+
+        public int GetMaxThreads()
+        {
+            return _options.MaxThreads;
+        }
+
+        public void SetTsv(bool tsv)
+        {
+            _options.LogTSV = tsv;
+            if (tsv && _options.Separator == ' ')
+            {
+                _options.Separator = '\t';
+            }
+        }
+
+        public bool GetTsv()
+        {
+            return _options.LogTSV;
+        }
+
+        public void SetDfs(bool dfs)
+        {
+            _options.DfsOnly = dfs;
+        }
+
+        public bool GetDfs()
+        {
+            return _options.DfsOnly;
+        }
+
+        public void SetSharesOnly(bool sharesOnly)
+        {
+            _options.ScanFoundShares = !sharesOnly;
+        }
+
+        public bool GetSharesOnly()
+        {
+            return !_options.ScanFoundShares;
+        }
+
+        public void SetRulesPath(string rulesPath)
+        {
+            _options.RuleDir = rulesPath;
+        }
+
+        public string GetRulesPath()
+        {
+            return _options.RuleDir;
+        }
+
+        public void SetLogType(string logType)
+        {
+            _options.LogType = (logType?.ToLower() == "json") ? LogType.JSON : LogType.Plain;
+        }
+
+        public string GetLogType()
+        {
+            return _options.LogType == LogType.JSON ? "json" : "plain";
+        }
+
+        public void SetTimeout(int timeout)
+        {
+            _options.TimeOut = timeout;
+        }
+
+        public int GetTimeout()
+        {
+            return _options.TimeOut;
+        }
+
 
         public static string ReadResource(string name)
         {
@@ -61,6 +287,7 @@ namespace Snaffler
             IPAddress ip;
             return IPAddress.TryParse(host, out ip);
         }
+
 
         private static Options ParseImpl(string[] args)
         {
