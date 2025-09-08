@@ -72,8 +72,31 @@ namespace Snaffler
             CallbackManager.UnregisterCallback(callback);
         }
 
+
         public void Run(string[] args)
         {
+            try
+            {
+                // parse cli opts in
+                this.Options = Config.Parse(args) ?? throw new ArgumentNullException(nameof(args));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+                DumpQueue();
+            }
+
+            Run();
+        }
+
+        public void SetOptions(Options Options)
+        {
+            this.Options = Options;
+        }
+
+        public void Run()
+        {
+
             // prime the hoststring lazy instantiator
             hostString();
             // print the thing
@@ -86,9 +109,6 @@ namespace Snaffler
             SnaffCon controller = null;
             try
             {
-                // parse cli opts in
-                Options = Config.Parse(args) ?? throw new ArgumentNullException(nameof(args));
-
                 // set up the  TSV output if the flag is set
                 if (Options.LogTSV)
                 {

@@ -29,14 +29,14 @@
     <AssemblyCompany>SnaffCon</AssemblyCompany>
     <AssemblyProduct>Snaffler</AssemblyProduct>
     <AssemblyCopyright>Copyright © 2025</AssemblyCopyright>
-    <AssemblyVersion>1.0.215.0</AssemblyVersion>
-    <FileVersion>1.0.215.0</FileVersion>
+    <AssemblyVersion>1.0.216.0</AssemblyVersion>
+    <FileVersion>1.0.216.0</FileVersion>
     <ComVisible>false</ComVisible>
     <Guid>2aa060b4-de88-4d2a-a26a-760c1cefec3e</Guid>
     
     <!-- NuGet Package Metadata -->
     <PackageId>Snaffler</PackageId>
-    <PackageVersion>1.0.215</PackageVersion>
+    <PackageVersion>1.0.216</PackageVersion>
     <Title>Snaffler</Title>
     <Description>A tool for quickly finding delicious candy needles in a haystack of network shares. Snaffler is designed to help red teams and security professionals identify sensitive files and data across network shares during penetration testing and security assessments.</Description>
     <Authors>@l0ss and @Sh3r4</Authors>
